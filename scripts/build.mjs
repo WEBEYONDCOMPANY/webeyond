@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { cp, mkdir, readFile, rename, rm, stat } from "node:fs/promises";
+import { chmod, cp, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,13 +12,13 @@ function inside(base, target) {
   return target.startsWith(`${base}${sep}`);
 }
 
-function run(command, args, cwd) {
+function run(command, args, cwd, env = process.env) {
   const needsCmd = process.platform === "win32" && ["npm", "pnpm"].includes(command);
   const executable = needsCmd ? "cmd.exe" : command;
   const commandArgs = needsCmd ? ["/d", "/s", "/c", `${command} ${args.join(" ")}`] : args;
   const result = spawnSync(executable, commandArgs, {
     cwd,
-    env: process.env,
+    env,
     stdio: "inherit",
   });
   if (result.error) throw result.error;
@@ -67,6 +67,21 @@ await rm(workspace, { recursive: true, force: true });
 await mkdir(workspace, { recursive: true });
 
 try {
+  let cloneEnv = process.env;
+  if (process.env.GITHUB_TOKEN) {
+    const askpass = join(workspace, "git-askpass.mjs");
+    await writeFile(askpass,
+      'const prompt = (process.argv[2] || "").toLowerCase();\n' +
+      'process.stdout.write(prompt.includes("username") ? "x-access-token" : process.env.GITHUB_TOKEN || "");\n');
+    const launcher = join(workspace, process.platform === "win32" ? "git-askpass.cmd" : "git-askpass.sh");
+    const node = process.execPath.replaceAll('"', '\\"');
+    const script = askpass.replaceAll('"', '\\"');
+    await writeFile(launcher, process.platform === "win32"
+      ? `@echo off\r\n"${node}" "${script}" %*\r\n`
+      : `#!/bin/sh\nexec "${node}" "${script}" "$@"\n`);
+    if (process.platform !== "win32") await chmod(launcher, 0o700);
+    cloneEnv = { ...process.env, GIT_ASKPASS: launcher, GIT_TERMINAL_PROMPT: "0" };
+  }
   const assembled = join(workspace, "assembled-demos");
   await mkdir(assembled);
   for (const demo of manifest) {
@@ -75,8 +90,9 @@ try {
       : join(workspace, `checkout-${demo.id}`);
     if (!process.env.DEMO_SOURCE_ROOT) {
       run("git", [...(process.platform === "win32" ? ["-c", "http.sslBackend=openssl"] : []),
+        ...(process.env.GITHUB_TOKEN ? ["-c", "credential.helper="] : []),
         "clone", "--depth", "1", "--branch", demo.branch,
-        `https://github.com/${demo.repository}.git`, source], root);
+        `https://github.com/${demo.repository}.git`, source], root, cloneEnv);
     }
     if (!(await exists(source))) throw new Error(`Missing source for ${demo.id}: ${source}`);
     const destination = join(assembled, demo.id);

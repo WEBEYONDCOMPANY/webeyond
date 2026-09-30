@@ -16,7 +16,7 @@ Run `pnpm build` from this repository. The build reads `demos.config.json`, clon
 | `web-and-beyond/demo-raman-portfolio` | `/demos/raman/` | `npm ci`, `npm run build` (Astro) |
 | `web-and-beyond/demo-meera-law` | `/demos/meera/` | `pnpm install --frozen-lockfile`, `pnpm run build` (Next static export) |
 
-The main site remains at `/` and `/work`. The final demo files are generated under `public/demos/` and ignored by Git. To add another demo, add its repository, branch, route, build type, and output directory or publish list to `demos.config.json`. Configure that demo's own base path in its repository. Build access to private repositories must be configured in the build environment before running `pnpm build`.
+The main site remains at `/` and `/work`. The final demo files are generated under `public/demos/` and ignored by Git. To add another demo, add its repository, branch, route, build type, and output directory or publish list to `demos.config.json`. Configure that demo's own base path in its repository. For private demo repositories, provide a build-time `GITHUB_TOKEN` with read access to those repositories. The token is passed through a temporary askpass script and is never put in clone URLs or output files.
 
 ## Work listing
 
