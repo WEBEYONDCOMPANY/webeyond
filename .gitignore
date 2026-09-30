@@ -1,0 +1,10 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env*
+*.log
+.demo-build/
+public/demos/
+public/work/index.html
+dist/
+.cache/

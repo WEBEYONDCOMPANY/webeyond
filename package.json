@@ -1,0 +1,16 @@
+{
+  "name": "web-and-beyond",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:work": "node scripts/build-work.mjs",
+    "dev": "node scripts/build-work.mjs && wrangler dev",
+    "deploy": "pnpm build && wrangler deploy",
+    "test": "node --test worker/index.test.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.92.0"
+  }
+}

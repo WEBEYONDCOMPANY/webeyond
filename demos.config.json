@@ -1,0 +1,41 @@
+[
+  {
+    "id": "veyil",
+    "repository": "web-and-beyond/demo-veyil",
+    "branch": "main",
+    "route": "/demos/veyil/",
+    "kind": "static-files",
+    "publish": [
+      "index.html",
+      "cart.html",
+      "styles.css",
+      "cart.css",
+      "brew-desk.js",
+      "cart-page.js",
+      "catalogue.js",
+      "find-your-pour.js",
+      "morning-list.js",
+      "navigation.js",
+      "assets"
+    ]
+  },
+  {
+    "id": "raman",
+    "repository": "web-and-beyond/demo-raman-portfolio",
+    "branch": "main",
+    "route": "/demos/raman/",
+    "kind": "built",
+    "packageManager": "npm",
+    "output": "dist",
+    "windowsBuild": ["node", "node_modules/astro/bin/astro.mjs", "build"]
+  },
+  {
+    "id": "meera",
+    "repository": "web-and-beyond/demo-meera-law",
+    "branch": "main",
+    "route": "/demos/meera/",
+    "kind": "built",
+    "packageManager": "pnpm",
+    "output": "out"
+  }
+]
