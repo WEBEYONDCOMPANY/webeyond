@@ -8,3 +8,8 @@ public/demos/
 public/work/index.html
 dist/
 .cache/
+.next/
+.astro/
+out/
+build/
+coverage/

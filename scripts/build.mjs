@@ -74,7 +74,8 @@ try {
       ? resolve(process.env.DEMO_SOURCE_ROOT, demo.repository.split("/")[1])
       : join(workspace, `checkout-${demo.id}`);
     if (!process.env.DEMO_SOURCE_ROOT) {
-      run("git", ["clone", "--depth", "1", "--branch", demo.branch,
+      run("git", [...(process.platform === "win32" ? ["-c", "http.sslBackend=openssl"] : []),
+        "clone", "--depth", "1", "--branch", demo.branch,
         `https://github.com/${demo.repository}.git`, source], root);
     }
     if (!(await exists(source))) throw new Error(`Missing source for ${demo.id}: ${source}`);
