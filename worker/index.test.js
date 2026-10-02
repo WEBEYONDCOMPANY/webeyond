@@ -20,32 +20,51 @@ function request(body) {
   });
 }
 
-test("valid enquiry sends the supplied details to the configured inbox", async () => {
-  const originalFetch = globalThis.fetch;
-  let emailRequest;
-  globalThis.fetch = async (url, options) => {
-    emailRequest = { url, options };
-    return new Response(JSON.stringify({ id: "test-id" }), { status: 200 });
+function database() {
+  const calls = [];
+  return {
+    calls,
+    prepare(sql) {
+      return {
+        bind(...values) {
+          return {
+            async run() {
+              calls.push({ sql, values });
+            },
+          };
+        },
+      };
+    },
   };
-  try {
-    const response = await worker.fetch(request(validLead), {
-      RESEND_API_KEY: "test-key",
-      LEAD_FROM_EMAIL: "Web & Beyond <hello@example.com>",
-      LEAD_TO_EMAIL: "webeyondcompany@gmail.com",
-    });
-    assert.equal(response.status, 200);
-    assert.equal(emailRequest.url, "https://api.resend.com/emails");
-    const payload = JSON.parse(emailRequest.options.body);
-    assert.deepEqual(payload.to, ["webeyondcompany@gmail.com"]);
-    assert.equal(payload.reply_to, "test@example.com");
-    assert.match(payload.text, /Example Shop/);
-    assert.match(payload.text, /9876543210/);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
+}
+
+test("valid enquiry inserts only the five allowed fields", async () => {
+  const DB = database();
+  const response = await worker.fetch(request(validLead), { DB });
+  assert.equal(response.status, 200);
+  assert.deepEqual(DB.calls, [{
+    sql: "INSERT INTO enquiries (name, phone, business_name, email, message) VALUES (?, ?, ?, ?, ?)",
+    values: ["Test Person", "+91 9876543210", "Example Shop", "test@example.com", "I need a small website."],
+  }]);
 });
 
-test("enquiry does not claim success while email is unconfigured", async () => {
+test("blank optional fields are stored as NULL", async () => {
+  const DB = database();
+  const response = await worker.fetch(request({
+    ...validLead, business: "  ", email: "", message: "  ",
+  }), { DB });
+  assert.equal(response.status, 200);
+  assert.deepEqual(DB.calls[0].values.slice(2), [null, null, null]);
+});
+
+test("missing required details do not reach the database", async () => {
+  const DB = database();
+  const response = await worker.fetch(request({ ...validLead, phone: "" }), { DB });
+  assert.equal(response.status, 400);
+  assert.equal(DB.calls.length, 0);
+});
+
+test("enquiry does not claim success without D1", async () => {
   const response = await worker.fetch(request(validLead), {});
   assert.equal(response.status, 503);
 });

@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "web-and-beyond",
+  "name": "webeyond",
   "main": "./worker/index.js",
   "compatibility_date": "2026-09-25",
   "compatibility_flags": ["nodejs_compat"],
@@ -9,6 +9,13 @@
     "binding": "ASSETS",
     "run_worker_first": ["/api/*", "/work", "/demos/veyil/*"]
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "webeyond-enquiries",
+      "database_id": "589cd8a5-8885-478f-9cfb-f5fb9a82ebf9"
+    }
+  ],
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1

@@ -22,14 +22,10 @@ The main site remains at `/` and `/work`. The final demo files are generated und
 
 The homepage links to `/work`. The work page is generated as static HTML, so its project names, descriptions, and demo links are available without JavaScript. To add a project, add one object to `data/projects.mjs` and run `pnpm build:work` for a quick local update, or `pnpm build` for the complete production artifact.
 
-## Enquiry email
+## Enquiry storage
 
-The form submits to `/api/enquiry`. The Worker validates fields and sends a text email through Resend. Set these secrets before production use:
+The existing form submits to `/api/enquiry`. The Worker validates the request and writes the five form fields to the `enquiries` D1 table. Blank optional fields become `NULL`; D1 supplies `id` and `created_at`. The schema is in `migrations/0001_create_enquiries.sql`.
 
-- `RESEND_API_KEY`: a Resend API key with sending access.
-- `LEAD_FROM_EMAIL`: a sender on a verified domain, for example `Web & Beyond <hello@example.com>`.
-- `LEAD_TO_EMAIL`: the inbox that should receive leads; currently intended to be `webeyondcompany@gmail.com`.
-
-For local development, copy `.dev.vars.example` to `.dev.vars` and enter real values. Never commit that file. The form reports a failure until the email settings are configured; it does not pretend to send an enquiry.
+Bind the production `webeyond-enquiries` database as `DB` in `wrangler.jsonc`, then apply the migration with `wrangler d1 migrations apply webeyond-enquiries --remote` before deploying the Worker. Local Wrangler development uses a local D1 database by default. The form reports an error if the binding or write is unavailable.
 
 See `DEMO-INTEGRATION.md` for the local build workflow and route checks.

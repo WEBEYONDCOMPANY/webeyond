@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS enquiries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  business_name TEXT,
+  email TEXT,
+  message TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

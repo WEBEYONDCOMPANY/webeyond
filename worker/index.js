@@ -48,7 +48,7 @@ function validate(data) {
   const lead = {
     name: clean(data.name, 80),
     phone: clean(data.phone, 25),
-    business: clean(data.business, 100),
+    business_name: clean(data.business, 100),
     email: clean(data.email, 160),
     message: clean(data.message, 1200),
     website: clean(data.website, 120),
@@ -78,48 +78,23 @@ async function handleEnquiry(request, env) {
   const lead = validate(body);
   if (!lead) return json({ error: "Please check your details" }, 400);
   if (lead.website) return json({ ok: true });
-  if (!env.RESEND_API_KEY || !env.LEAD_FROM_EMAIL || !env.LEAD_TO_EMAIL) {
-    console.error(JSON.stringify({ event: "enquiry_email_unconfigured" }));
-    return json({ error: "Email is not configured" }, 503);
-  }
-  const lines = [
-    "New Web & Beyond enquiry",
-    "",
-    `Name: ${lead.name}`,
-    `Phone: ${lead.phone}`,
-    `Business: ${lead.business || "Not provided"}`,
-    `Email: ${lead.email || "Not provided"}`,
-    "",
-    "What they have in mind:",
-    lead.message || "Not provided",
-  ];
+  if (!env.DB) return json({ error: "Enquiries are unavailable" }, 503);
   try {
-    const sent = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${env.RESEND_API_KEY}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        from: env.LEAD_FROM_EMAIL,
-        to: [env.LEAD_TO_EMAIL],
-        subject: `New enquiry from ${lead.name.replace(/[\r\n]/g, " ")}`,
-        text: lines.join("\n"),
-        ...(lead.email ? { reply_to: lead.email } : {}),
-      }),
-    });
-    if (!sent.ok) {
-      console.error(
-        JSON.stringify({ event: "enquiry_email_failed", status: sent.status }),
-      );
-      return json({ error: "Could not send enquiry" }, 502);
-    }
+    await env.DB.prepare(
+      "INSERT INTO enquiries (name, phone, business_name, email, message) VALUES (?, ?, ?, ?, ?)",
+    )
+      .bind(
+        lead.name,
+        lead.phone,
+        lead.business_name || null,
+        lead.email || null,
+        lead.message || null,
+      )
+      .run();
     return json({ ok: true });
-  } catch (error) {
-    console.error(
-      JSON.stringify({ event: "enquiry_email_error", message: String(error) }),
-    );
-    return json({ error: "Could not send enquiry" }, 502);
+  } catch {
+    console.error(JSON.stringify({ event: "enquiry_storage_failed" }));
+    return json({ error: "Could not save enquiry" }, 503);
   }
 }
 
