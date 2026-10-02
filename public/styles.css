@@ -3702,7 +3702,6 @@ html.home-page {
 html.home-page .landing-stage,
 html.home-page .build-section,
 html.home-page .delivery-section,
-html.home-page .beyond-section,
 html.home-page .process-section,
 html.home-page .capability-section,
 html.home-page .language-section,
@@ -3742,4 +3741,157 @@ html.home-page .site-footer {
 html.home-page.snap-driving {
   scroll-behavior: auto;
   scroll-snap-type: none;
+}
+
+/* Keep the remaining homepage sections alternating after the & Beyond removal. */
+.process-section {
+  color: var(--white);
+  background: var(--night);
+}
+
+.process-section .process-heading h2 em,
+.process-section .process-list li > span,
+.process-section .process-list p {
+  color: #d4d9d7;
+}
+
+.process-section .process-list li {
+  border-top-color: #5a6160;
+}
+
+.process-conclusion {
+  margin-top: clamp(28px, 4.5svh, 56px);
+  padding-top: clamp(15px, 2svh, 23px);
+  border-top: 1px solid #5a6160;
+}
+
+.process-conclusion p {
+  margin: 0;
+}
+
+.process-conclusion p:first-child {
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.process-conclusion p:last-child {
+  margin-top: 6px;
+  color: #d4d9d7;
+  font-size: clamp(14px, 1.45vw, 18px);
+  line-height: 1.35;
+}
+
+.capability-section {
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.capability-section .capability-eyebrow,
+.capability-section .capability-body {
+  color: #4d5454;
+}
+
+.capability-section .capability-work-link {
+  color: var(--ink);
+}
+
+.capability-section :focus-visible {
+  outline-color: var(--ink);
+}
+
+.language-section {
+  color: var(--white);
+  background: var(--night);
+  background-image: none;
+}
+
+.language-section .language-eyebrow,
+.language-section .language-copy {
+  color: #d4d9d7;
+}
+
+.language-section .language-lines,
+.language-section .language-english,
+.language-section .language-tamil {
+  color: var(--white);
+}
+
+.contact-section {
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.contact-section .contact-intro .eyebrow,
+.contact-section .contact-intro h2,
+.contact-section .contact-intro h2 em,
+.contact-section .contact-next-time strong,
+.contact-section .contact-next-primary,
+.contact-section .contact-next-languages,
+.contact-section .form-row label {
+  color: var(--ink);
+}
+
+.contact-section .contact-intro > p:not(.eyebrow),
+.contact-section .contact-next-time > span,
+.contact-section .contact-next-secondary,
+.contact-section .contact-next-choice,
+.contact-section .form-row label small,
+.contact-section .form-row label > span,
+.contact-section .form-note {
+  color: #4d5454;
+}
+
+.contact-section .contact-next,
+.contact-section .contact-next-details {
+  border-color: var(--line);
+}
+
+.contact-section .contact-next-time {
+  border-color: #889196;
+}
+
+.contact-section .form-row input,
+.contact-section .form-row textarea {
+  color: var(--ink);
+  border-bottom-color: #889196;
+}
+
+.contact-section .form-row input::placeholder,
+.contact-section .form-row textarea::placeholder {
+  color: #687176;
+}
+
+.contact-section .form-row input:focus,
+.contact-section .form-row textarea:focus {
+  border-bottom-color: var(--ink);
+}
+
+.contact-section .form-row [aria-invalid="true"] {
+  border-bottom-color: #a42828;
+}
+
+.contact-section .field-error,
+.contact-section .form-status[data-state="error"] {
+  color: #a42828;
+}
+
+.contact-section .form-status[data-state="success"] {
+  color: #20633a;
+}
+
+.contact-section :focus-visible {
+  outline-color: var(--ink);
+}
+
+.contact-section .form-button {
+  color: var(--white);
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+.contact-section .form-button:hover {
+  color: var(--ink);
+  background: transparent;
 }
