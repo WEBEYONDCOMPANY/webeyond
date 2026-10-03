@@ -4,6 +4,10 @@ import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateWorkPreviews } from "./generate-work-previews.mjs";
 
+if (process.env.WORKERS_CI === "1") {
+  throw new Error("Production builds run in GitHub Actions. Disable Cloudflare Workers Builds after the first successful Actions deployment; this legacy build will not fetch demos or deploy.");
+}
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const workspace = resolve(root, ".demo-build");
 const output = resolve(root, "public", "demos");

@@ -8,6 +8,12 @@ Run `pnpm install` and `pnpm dev`, then open the local address Wrangler prints. 
 
 ## Production build and demo repositories
 
+Production CI/CD is prepared in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
+It builds and deploys on pushes to `main` using GitHub Actions. See
+[WORK-PREVIEWS.md](WORK-PREVIEWS.md) for required secrets and the reviewed cutover
+from Cloudflare Workers Builds. Local builds require a preinstalled Playwright
+Chromium browser or `PREVIEW_BROWSER_EXECUTABLE`.
+
 Desktop portfolio previews are now generated automatically from the same freshly
 assembled demos during `pnpm build`. See [WORK-PREVIEWS.md](WORK-PREVIEWS.md) for
 capture settings, browser installation, output paths and failure behavior.

@@ -2,7 +2,6 @@ import { createServer } from "node:http";
 import { readFile, mkdir, stat, writeFile } from "node:fs/promises";
 import { resolve, join, extname, sep, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawnSync } from "node:child_process";
 import { chromium } from "playwright";
 import sharp from "sharp";
 
@@ -56,11 +55,6 @@ export async function generateWorkPreviews({ demoDirectory, output, manifest }) 
   await mkdir(output, { recursive: true });
   const configured = manifest.filter(d => d.screenshot);
   for (const demo of configured) if (!/^[a-z0-9-]+-desktop\.webp$/.test(demo.screenshot.output)) throw new Error(`Invalid screenshot output: ${demo.id}`);
-  if (!process.env.PREVIEW_BROWSER_EXECUTABLE) {
-    console.log("[work-previews] Installing Chromium...");
-    const install = spawnSync(process.execPath, [join(root, "node_modules/playwright/cli.js"), "install", ...(process.platform === "linux" ? ["--with-deps"] : []), "chromium"], { stdio: "inherit" });
-    if (install.status !== 0) throw new Error("Playwright browser installation failed. Prepare Chromium dependencies in CI before building; no partial previews were published.");
-  }
   console.log("[work-previews] Starting preview server...");
   const server = await serveDemos(demoDirectory);
   let browser;
