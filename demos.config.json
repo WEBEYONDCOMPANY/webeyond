@@ -1,7 +1,8 @@
 [
   {
     "id": "veyil",
-    "repository": "web-and-beyond/demo-veyil",
+    "repository": "WEBEYONDCOMPANY/demo-veyil",
+    "screenshot": { "output": "veyil-desktop.webp", "teaser": true },
     "branch": "main",
     "route": "/demos/veyil/",
     "kind": "static-files",
@@ -21,7 +22,8 @@
   },
   {
     "id": "raman",
-    "repository": "web-and-beyond/demo-raman-portfolio",
+    "repository": "WEBEYONDCOMPANY/demo-raman-portfolio",
+    "screenshot": { "output": "raman-desktop.webp", "teaser": true },
     "branch": "main",
     "route": "/demos/raman/",
     "kind": "built",
@@ -31,7 +33,8 @@
   },
   {
     "id": "meera",
-    "repository": "web-and-beyond/demo-meera-law",
+    "repository": "WEBEYONDCOMPANY/demo-meera-law",
+    "screenshot": { "output": "meera-desktop.webp" },
     "branch": "main",
     "route": "/demos/meera/",
     "kind": "built",

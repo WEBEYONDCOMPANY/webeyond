@@ -40,3 +40,18 @@ const directory = join(root, "public", "work");
 await mkdir(directory, { recursive: true });
 await writeFile(join(directory, "index.html"), output);
 console.log(`Built work page with ${projects.length} projects`);
+
+// The same demo manifest controls which generated previews fill the two slots.
+const demos = JSON.parse(await readFile(join(root, "demos.config.json"), "utf8"));
+const teaser = demos.filter(d => d.screenshot?.teaser);
+if (teaser.length !== 2) throw new Error("Homepage requires exactly two teaser demos");
+const homepage = join(root, "public", "index.html");
+const html = await readFile(homepage, "utf8");
+const images = teaser.map(demo => {
+  const project = projects.find(project => project.route === demo.route);
+  if (!project) throw new Error(`Missing portfolio description: ${demo.id}`);
+  return `<img src="/generated-work/${escape(demo.screenshot.output)}" alt="${escape(project.name)} desktop website preview" width="1440" height="900" loading="lazy" />`;
+}).join("");
+const slots = /(<a class="work-peek"[^>]*>)[\s\S]*?(<\/a>)/;
+if (!slots.test(html)) throw new Error("Homepage preview slots were not found");
+await writeFile(homepage, html.replace(slots, `$1${images}$2`));

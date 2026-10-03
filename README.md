@@ -8,6 +8,10 @@ Run `pnpm install` and `pnpm dev`, then open the local address Wrangler prints. 
 
 ## Production build and demo repositories
 
+Desktop portfolio previews are now generated automatically from the same freshly
+assembled demos during `pnpm build`. See [WORK-PREVIEWS.md](WORK-PREVIEWS.md) for
+capture settings, browser installation, output paths and failure behavior.
+
 Run `pnpm build` from this repository. The build reads `demos.config.json`, clones each demo's `main` branch into ignored `.demo-build/`, installs from that demo's lockfile, builds it where needed, and assembles one `public/` artifact. Wrangler deploys that artifact and the root Worker as one Cloudflare deployment. Demo source never belongs in this repository.
 
 | Repository | Route | Build |

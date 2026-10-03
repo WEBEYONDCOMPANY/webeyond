@@ -5,6 +5,7 @@ node_modules/
 *.log
 .demo-build/
 public/demos/
+public/generated-work/
 public/work/index.html
 dist/
 .cache/

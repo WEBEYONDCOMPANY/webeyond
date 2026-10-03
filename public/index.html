@@ -16,10 +16,11 @@
       href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,300..800&family=Anek+Tamil:wght@300..800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css?v=20260930-7" />
+    <link rel="stylesheet" href="/styles.css?v=20261004-seam-reset" />
     <script src="/app.js" defer></script>
-    <script src="/build-map.js?v=1" defer></script>
-    <script src="/snap.js?v=1" defer></script>
+    <script src="/build-map.js?v=2" defer></script>
+    <script src="/top-ui.js" defer></script>
+    <script src="/middle-ui.js" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -28,10 +29,11 @@
         <img src="/web-beyond-logo.png?v=2" alt="" width="210" height="52" />
       </a>
       <nav class="header-nav" aria-label="Primary navigation">
-        <a href="/work">Work</a><a href="#approach">Approach</a
-        ><a class="header-contact" href="#contact"
-          >Start <span aria-hidden="true">↗</span></a
-        >
+        <div class="nav-menu" id="nav-menu">
+          <a href="#top">Home</a><a href="/work">Our Work</a><a href="/admin">Admin</a>
+        </div>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>
+        <a class="header-contact" href="#contact">Enquire</a>
       </nav>
     </header>
 
@@ -49,9 +51,8 @@
             We build what your business needs online. Fast. Done properly.
           </p>
           <div class="hero-actions">
-            <a class="hero-start" href="#contact"
-              >Start <span aria-hidden="true">↗</span></a
-            >
+            <a class="work-teaser-link hero-primary" href="/work"><span>See our work</span><span aria-hidden="true">↗</span></a>
+            <a class="hero-start hero-secondary" href="#contact">Tell us what you need <span aria-hidden="true">↗</span></a>
           </div>
         </div>
       </section>
@@ -60,13 +61,8 @@
         <div class="wrap work-teaser-inner">
           <div class="work-teaser-main">
             <h2 id="work-title">See our work.</h2>
-            <a class="work-teaser-link" href="/work"><span>Explore our work</span><span aria-hidden="true">↗</span></a>
           </div>
-          <div class="work-peek" aria-hidden="true">
-            <img src="/assets/veyil-collection.webp" alt="" loading="lazy" width="500" height="374" />
-            <img src="/assets/raman-room.webp" alt="" loading="lazy" width="500" height="374" />
-            <img src="/assets/meera-portrait.webp" alt="" loading="lazy" width="500" height="374" />
-          </div>
+          <a class="work-peek" href="/work" aria-label="Explore our work"><img src="/generated-work/veyil-desktop.webp" alt="VEYIL Coffee Co. desktop website preview" width="1440" height="900" loading="lazy" /><img src="/generated-work/raman-desktop.webp" alt="Raman desktop website preview" width="1440" height="900" loading="lazy" /></a>
         </div>
       </section>
       </div>
@@ -150,6 +146,7 @@
         <div class="process-conclusion">
           <p>We recommend what fits.</p>
           <p>Nothing extra just to fill a package.</p>
+          <a class="process-contact-link" href="#contact">Tell us what you need <span aria-hidden="true">→</span></a>
         </div>
         </div>
       </section>
@@ -157,9 +154,9 @@
       <section class="capability-section" aria-labelledby="capability-title">
         <div class="wrap capability-inner">
           <p class="capability-eyebrow">SIMPLE ON PURPOSE.</p>
-          <h2 id="capability-title">Don’t let the simplicity fool you.</h2>
+          <h2 id="capability-title">Don’t let the<br /> simplicity fool you.</h2>
           <p class="capability-body">We don’t need a complicated website to show what we can do. We can build far beyond what you see here.</p>
-          <p class="capability-final">Name it. We’ll build it.</p>
+          <p class="capability-final">Name it.<br /> We’ll build it.</p>
           <a class="capability-work-link" href="/work">Don’t take our word for it. <span>See our work <span aria-hidden="true">→</span></span></a>
         </div>
       </section>
