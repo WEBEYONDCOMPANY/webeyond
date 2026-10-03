@@ -8,7 +8,8 @@
     "build:work": "node scripts/build-work.mjs",
     "dev": "node scripts/build-work.mjs && wrangler dev",
     "deploy": "pnpm build && wrangler deploy",
-    "test": "node --test worker/index.test.js"
+    "test": "node --test worker/index.test.js",
+    "test:runtime": "wrangler deploy --dry-run --outdir .wrangler/auth-review && node --test worker/runtime.test.js"
   },
   "devDependencies": {
     "wrangler": "^4.92.0"

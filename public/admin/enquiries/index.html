@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Enquiries | WEBEYOND Admin</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/admin/enquiries/admin.css" />
+    <script type="module" src="/admin/enquiries/enquiries.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to enquiries</a>
+    <header class="admin-header">
+      <nav class="admin-nav" aria-label="Admin navigation">
+        <a class="brand" href="/" aria-label="WEBEYOND site"><img src="/web-beyond-logo.png?v=2" alt="WEBEYOND" /></a>
+        <div class="nav-links">
+          <a href="/">Site</a>
+          <a href="/admin/enquiries" aria-current="page">Enquiries</a>
+          <button id="logout" type="button">Log out</button>
+        </div>
+      </nav>
+    </header>
+    <main id="main" class="admin-main">
+      <div class="page-heading">
+        <div><h1>Enquiries</h1><p>Customer enquiries submitted through the website</p></div>
+        <span id="count" class="count" aria-live="polite"></span>
+      </div>
+      <p id="status" class="status" role="status">Loading enquiries…</p>
+      <div id="table-wrap" class="table-wrap" hidden tabindex="0" aria-label="Enquiries table, scroll horizontally to see all columns">
+        <table>
+          <thead><tr>
+            <th scope="col" data-key="id"><button type="button">ID <span aria-hidden="true"></span></button></th>
+            <th scope="col" data-key="name"><button type="button">Name <span aria-hidden="true"></span></button></th>
+            <th scope="col" data-key="phone"><button type="button">Phone <span aria-hidden="true"></span></button></th>
+            <th scope="col" data-key="business_name"><button type="button">Business name <span aria-hidden="true"></span></button></th>
+            <th scope="col" data-key="email"><button type="button">Email <span aria-hidden="true"></span></button></th>
+            <th scope="col" data-key="message"><button type="button">Message <span aria-hidden="true"></span></button></th>
+            <th scope="col" data-key="created_at" aria-sort="descending"><button type="button">Created at <span aria-hidden="true">↓</span></button></th>
+          </tr></thead>
+          <tbody id="enquiries-body"></tbody>
+        </table>
+      </div>
+    </main>
+  </body>
+</html>

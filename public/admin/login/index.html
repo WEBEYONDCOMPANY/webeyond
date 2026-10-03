@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Log in | WEBEYOND Admin</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/admin/login/login.css" />
+    <script type="module" src="/admin/login/login.js"></script>
+  </head>
+  <body>
+    <header><a href="/" aria-label="WEBEYOND site"><img src="/web-beyond-logo.png?v=2" alt="WEBEYOND" /></a><a href="/">Site</a></header>
+    <main>
+      <h1>Admin log in</h1>
+      <form id="login-form">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" required maxlength="254" />
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="1024" />
+        <p id="login-status" role="status" hidden></p>
+        <button type="submit">Log in</button>
+      </form>
+    </main>
+  </body>
+</html>

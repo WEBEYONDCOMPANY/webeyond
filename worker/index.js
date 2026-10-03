@@ -1,3 +1,5 @@
+import { isAuthenticated, handleLogin, handleLogout, cleanupLoginThrottle } from "./auth.js";
+
 const MAX_BODY_BYTES = 4096;
 
 function json(data, status = 200) {
@@ -98,9 +100,64 @@ async function handleEnquiry(request, env) {
   }
 }
 
+async function handleAdminEnquiries(request, env) {
+  if (request.method !== "GET") return json({ error: "Method not allowed" }, 405);
+  if (!env.DB) return json({ error: "Enquiries are unavailable" }, 503);
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT id, name, phone, business_name, email, message, created_at FROM enquiries ORDER BY created_at DESC, id DESC",
+    ).all();
+    return json({ enquiries: results });
+  } catch {
+    console.error(JSON.stringify({ event: "admin_enquiries_read_failed" }));
+    return json({ error: "Could not load enquiries" }, 503);
+  }
+}
+
 export default {
+  async scheduled(_controller, env) {
+    await cleanupLoginThrottle(env);
+  },
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
+    const adminPath = path === "/admin" || path.startsWith("/admin/");
+    const adminApiPath = path === "/api/admin" || path.startsWith("/api/admin/");
+    if (adminPath || adminApiPath) {
+      if (path === "/api/admin/login") return handleLogin(request, env, readSmallJson);
+      const loginAsset = ["/admin/login", "/admin/login/", "/admin/login/index.html", "/admin/login/login.css", "/admin/login/login.js"].includes(path);
+      let authenticated = false;
+      try {
+        if (!loginAsset) authenticated = await isAuthenticated(request, env);
+      } catch {
+        return json({ error: "Admin unavailable" }, 503);
+      }
+      if (!loginAsset && !authenticated) {
+        if (adminApiPath) return json({ error: "Unauthorized" }, 401);
+        return new Response(null, { status: 302, headers: {
+          location: "/admin/login", "cache-control": "private, no-store",
+        } });
+      }
+      if (path === "/api/admin/logout") return handleLogout(request, env);
+      if (path === "/api/admin/enquiries") return handleAdminEnquiries(request, env);
+      if (adminApiPath) return json({ error: "Not found" }, 404);
+      if (path === "/admin" || path === "/admin/") {
+        return new Response(null, { status: 302, headers: {
+          location: new URL("/admin/enquiries", request.url).href,
+          "cache-control": "private, no-store",
+        } });
+      }
+      const assetRequest = ["/admin/enquiries", "/admin/login"].includes(path)
+        ? new Request(new URL(`${path}/`, request.url), request)
+        : request;
+      const asset = await env.ASSETS.fetch(assetRequest);
+      const headers = new Headers(asset.headers);
+      headers.set("cache-control", "private, no-store");
+      headers.set("x-content-type-options", "nosniff");
+      headers.set("content-security-policy", "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
+      headers.set("x-frame-options", "DENY");
+      headers.set("referrer-policy", "no-referrer");
+      return new Response(asset.body, { status: asset.status, statusText: asset.statusText, headers });
+    }
     if (path === "/api/enquiry") return handleEnquiry(request, env);
     if (path.startsWith("/api/")) return json({ error: "Not found" }, 404);
     if (path === "/work") {
