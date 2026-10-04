@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { hashPassword } from "./password.js";
@@ -13,20 +13,25 @@ const wranglerRequire = createRequire(require.resolve("wrangler/package.json"));
 const { Miniflare, convertV4MiniflareOptions } = wranglerRequire("miniflare");
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const publicRoot = resolve(root, "public");
+const workerConfig=JSON.parse(await readFile(resolve(root,"wrangler.jsonc"),"utf8"));
 
 test("Cloudflare runtime completes password login, D1 access, throttling and session revocation", { timeout: 60000 }, async () => {
   const password = crypto.randomUUID() + crypto.randomUUID();
+  // Test-only marker proves whether the real asset router invoked user code.
+  const bundle=await readFile(resolve(root,".wrangler/auth-review/index.js"),"utf8");
+  assert.ok(bundle.includes("index_default as default"));
+  await writeFile(resolve(root,".wrangler/auth-review/routing-test.js"),bundle.replace("index_default as default","routing_test as default")+`\nconst routing_test={...index_default,async fetch(...args){const response=await index_default.fetch(...args);const headers=new Headers(response.headers);headers.set('x-test-worker-invoked','yes');return new Response(response.body,{status:response.status,statusText:response.statusText,headers});}};`);
   const runtime = new Miniflare(convertV4MiniflareOptions({
     host: "127.0.0.1", port: 0,
-    workers: [{ name: "webeyond-auth-test", modules: true, scriptPath: resolve(root, ".wrangler/auth-review/index.js"),
+    workers: [{ name: "webeyond-auth-test", modules: true, scriptPath: resolve(root, ".wrangler/auth-review/routing-test.js"),
     compatibilityDate: "2026-09-25", compatibilityFlags: ["nodejs_compat"],
     bindings: { ADMIN_PASSWORD_HASH: await hashPassword(password) },
     d1Databases: { DB: "isolated-admin-auth-test" },
-    assets: { directory: publicRoot, binding: "ASSETS", run_worker_first: ["/api/*", "/admin", "/admin/*", "/work", "/demos/veyil/*"], routerConfig: { has_user_worker: true } }, }],
+    assets: { directory: publicRoot, binding: "ASSETS", run_worker_first: workerConfig.assets.run_worker_first, routerConfig: { has_user_worker: true } }, }],
   }));
   try {
     const db = await runtime.getD1Database("DB", "webeyond-auth-test");
-    for (const name of ["0001_create_enquiries.sql", "0002_admin_auth.sql", "0003_client_login_throttle.sql"]) {
+    for (const name of ["0001_create_enquiries.sql", "0002_admin_auth.sql", "0003_client_login_throttle.sql", "0004_enquiry_lead.sql"]) {
       const sql = await readFile(resolve(root, "migrations", name), "utf8");
       // D1 exec treats each line as a statement; use complete migration statements.
       for (const statement of sql.replace(/--[^\n]*/g, "").split(";").map((value) => value.trim()).filter(Boolean)) await db.prepare(statement).run();
@@ -45,7 +50,9 @@ test("Cloudflare runtime completes password login, D1 access, throttling and ses
     assert.equal((await get("/api/admin/enquiries")).status, 401);
     assert.equal((await get("/admin/login")).status, 200);
     assert.equal((await get("/")).status, 200);
-    assert.equal((await post("/api/enquiry", { name: "Runtime synthetic test", phone: "1234567890", message: "Synthetic message" })).status, 200);
+    assert.equal((await get('/?ref=ignored')).headers.get('set-cookie'),null);
+    assert.equal((await post('/api/enquiry',{name:'No source',phone:'1234567890'})).status,400);
+    assert.equal((await post('/api/enquiry',{name:'Runtime synthetic test',phone:'1234567890',message:'Synthetic message',lead:'direct'})).status,200);
     assert.equal((await post("/api/admin/login", { email: "webeyondcompany@gmail.com", password: "incorrect" })).status, 401);
     const login = await post("/api/admin/login", { email: "webeyondcompany@gmail.com", password });
     assert.equal(login.status, 200);
@@ -79,6 +86,20 @@ test("Cloudflare runtime completes password login, D1 access, throttling and ses
         const errors = [];
         page.on("pageerror", (error) => errors.push(error.message));
         const base = String(await runtime.ready).replace(/\/$/, "");
+        for(const lead of ['CFT','direct']) {
+          await page.goto(base+'/#contact');
+          assert.equal(await page.locator('#lead').inputValue(),'');
+          await page.locator('#name').fill('Browser '+lead);
+          await page.locator('#phone').fill('9876543210');
+          await page.locator('#lead-form button[type=submit]').click();
+          await page.getByText('Please choose how you found us.',{exact:true}).waitFor();
+          await page.locator('#lead').selectOption(lead);
+          await page.locator('#lead-form button[type=submit]').click();
+          await page.locator('#form-status[data-state=success]').waitFor();
+          assert.equal((await db.prepare('SELECT lead FROM enquiries WHERE name = ?').bind('Browser '+lead).first()).lead,lead);
+          assert.equal(await page.locator('#lead').inputValue(),'');
+          await db.prepare('DELETE FROM enquiries WHERE name = ?').bind('Browser '+lead).run();
+        }
         await page.goto(base + "/admin/enquiries");
         await page.waitForURL("**/admin/login");
         await page.locator("#email").fill("webeyondcompany@gmail.com");
@@ -103,6 +124,29 @@ test("Cloudflare runtime completes password login, D1 access, throttling and ses
         assert.ok(await page.locator(".table-wrap").evaluate((element) => element.scrollWidth > element.clientWidth));
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
         await page.screenshot({ path: resolve(root, ".wrangler/auth-review/enquiries-mobile.png"), fullPage: true });
+        await page.getByRole('button',{name:'+ Add enquiry',exact:true}).click();
+        await page.locator('#add-form [name=name]').fill('Manual UI test');
+        await page.locator('#add-form [name=phone]').fill('1234567890');
+        await page.locator('#add-form [name=lead]').fill('instagram');
+        await page.screenshot({path:resolve(root,'.wrangler/auth-review/add-mobile.png')});
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+        await page.getByRole('button',{name:'Save enquiry',exact:true}).click();
+        await page.getByText('3 enquiries',{exact:true}).waitFor();
+        const created=await db.prepare('SELECT * FROM enquiries WHERE name = ?').bind('Manual UI test').first();
+        assert.equal(created.lead,'instagram');
+        await page.getByRole('button',{name:'Lead',exact:true}).click();
+        assert.equal(await page.locator('th[data-key=lead]').getAttribute('aria-sort'),'ascending');
+        assert.equal(await page.locator('#enquiries-body tr:not(.message-detail)').last().locator('td:nth-child(7)').textContent(),'instagram');
+        await page.getByRole('button',{name:'Lead',exact:true}).click();
+        assert.equal(await page.locator('th[data-key=lead]').getAttribute('aria-sort'),'descending');
+        assert.equal(await page.locator('#enquiries-body tr:first-child td:nth-child(7)').textContent(),'instagram');
+        page.once('dialog',async dialog=>{assert.ok(dialog.message().includes(String(created.id))&&dialog.message().includes(created.name));await dialog.dismiss();});
+        await page.getByRole('button',{name:`Delete enquiry ${created.id} from Manual UI test`,exact:true}).click();
+        assert.ok(await db.prepare('SELECT id FROM enquiries WHERE id = ?').bind(created.id).first());
+        page.once('dialog',dialog=>dialog.accept());
+        await page.getByRole('button',{name:`Delete enquiry ${created.id} from Manual UI test`,exact:true}).click();
+        await page.getByText('2 enquiries',{exact:true}).waitFor();
+        assert.equal(await db.prepare('SELECT id FROM enquiries WHERE id = ?').bind(created.id).first(),null);
         await page.getByRole("button", { name: "Log out", exact: true }).click();
         await page.waitForURL("**/admin/login");
         assert.equal((await page.request.get(base + "/api/admin/enquiries")).status(), 401);

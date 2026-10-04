@@ -10,7 +10,7 @@ const origin = "https://webeyond.example";
 const email = "webeyondcompany@gmail.com";
 const password = crypto.randomUUID() + crypto.randomUUID();
 let passwordHash;
-const schema = await Promise.all(["0001_create_enquiries.sql", "0002_admin_auth.sql", "0003_client_login_throttle.sql"].map((name) => readFile(new URL("../migrations/" + name, import.meta.url), "utf8")));
+const schema = await Promise.all(["0001_create_enquiries.sql", "0002_admin_auth.sql", "0003_client_login_throttle.sql", "0004_enquiry_lead.sql"].map((name) => readFile(new URL("../migrations/" + name, import.meta.url), "utf8")));
 before(async () => { passwordHash = await hashPassword(password); });
 
 function setup(t) {
@@ -33,7 +33,7 @@ function setup(t) {
   };
   return { sqlite, calls, env: {
     DB, ADMIN_PASSWORD_HASH: passwordHash,
-    ASSETS: { fetch: async (request) => new Response("Asset: " + new URL(request.url).pathname) },
+    ASSETS: { fetch: async (request) => new Response("Asset: " + new URL(request.url).pathname,{headers:{"content-type":"text/html"}}) },
   } };
 }
 
@@ -110,7 +110,7 @@ test("correct login stores only a token hash and sets a finite secure cookie", a
   assert.ok(!JSON.stringify(row).includes(password));
 });
 
-test("valid session allows pages, redirect and seven-column D1 read in newest order", async (t) => {
+test("valid session allows pages, redirect and eight-column D1 read in newest order", async (t) => {
   const { env, sqlite } = setup(t);
   sqlite.prepare("INSERT INTO enquiries (name, phone, created_at) VALUES (?, ?, ?)").run("Older", "1234567890", "2026-01-01 00:00:00");
   sqlite.prepare("INSERT INTO enquiries (name, phone, message, created_at) VALUES (?, ?, ?, ?)").run("Newer", "9876543210", "Synthetic enquiry", "2026-10-03 00:00:00");
@@ -126,7 +126,7 @@ test("valid session allows pages, redirect and seven-column D1 read in newest or
   assert.equal(response.status, 200);
   const { enquiries } = await response.json();
   assert.deepEqual(enquiries.map((row) => row.name), ["Newer", "Older"]);
-  assert.deepEqual(Object.keys(enquiries[0]), ["id", "name", "phone", "business_name", "email", "message", "created_at"]);
+  assert.deepEqual(Object.keys(enquiries[0]), ["id", "name", "phone", "business_name", "email", "message", "lead", "created_at"]);
   assert.equal(enquiries[0].email, null);
 });
 
@@ -231,10 +231,10 @@ test("missing hash or storage fails closed", async (t) => {
   assert.equal((await worker.fetch(request("/api/admin/enquiries", { cookie }), { ...env, DB: undefined })).status, 503);
 });
 
-test("admin APIs stay read-only except login/logout", async (t) => {
+test("admin APIs reject invalid create requests and unsupported routes", async (t) => {
   const { env } = setup(t);
   const cookie = sessionCookie(await logIn(env));
-  assert.equal((await worker.fetch(request("/api/admin/enquiries", { cookie, method: "POST", body: {} }), env)).status, 405);
+  assert.equal((await worker.fetch(request("/api/admin/enquiries", { cookie, method: "POST", body: {} }), env)).status, 400);
   assert.equal((await worker.fetch(request("/api/admin/future", { cookie }), env)).status, 404);
 });
 
@@ -248,14 +248,16 @@ test("public homepage and work page remain public", async (t) => {
 
 test("public enquiry submissions store just five fields with optional NULL values", async (t) => {
   const { env, sqlite, calls } = setup(t);
-  const response = await worker.fetch(request("/api/enquiry", { method: "POST", body: { name: "Synthetic public test", phone: "+91 9876543210", business: " ", email: "", message: "" } }), env);
+  const response = await worker.fetch(request("/api/enquiry", { method: "POST", body: { name: "Synthetic public test", phone: "+91 9876543210", business: " ", email: "", message: "", lead: "direct" } }), env);
   assert.equal(response.status, 200);
   const row = sqlite.prepare("SELECT * FROM enquiries").get();
   assert.equal(row.name, "Synthetic public test");
   assert.equal(row.business_name, null);
   assert.equal(row.email, null);
   assert.equal(row.message, null);
-  assert.equal(calls[0].sql, "INSERT INTO enquiries (name, phone, business_name, email, message) VALUES (?, ?, ?, ?, ?)");
+  assert.equal(row.lead, "direct");
+  assert.equal(row.lead, "direct");
+  assert.equal(calls[0].sql, "INSERT INTO enquiries (name, phone, business_name, email, message, lead) VALUES (?, ?, ?, ?, ?, ?)");
 });
 
 test("invalid public enquiry never reaches D1 and missing DB never reports success", async (t) => {
@@ -263,5 +265,54 @@ test("invalid public enquiry never reaches D1 and missing DB never reports succe
   const response = await worker.fetch(request("/api/enquiry", { method: "POST", body: { name: "Test", phone: "" } }), env);
   assert.equal(response.status, 400);
   assert.equal(calls.length, 0);
-  assert.equal((await worker.fetch(request("/api/enquiry", { method: "POST", body: { name: "Test", phone: "1234567890" } }), { ...env, DB: undefined })).status, 503);
+  assert.equal((await worker.fetch(request("/api/enquiry", { method: "POST", body: { name: "Test", phone: "1234567890", lead: "direct" } }), { ...env, DB: undefined })).status, 503);
+});
+
+test("public source is required and allowlisted; links and cookies are ignored", async t=>{
+  const {env,sqlite}=setup(t);
+  for(const lead of [undefined,"","cft","manual"," CFT ",[],{}]) {
+    const r=await worker.fetch(request('/api/enquiry?ref=cft',{method:'POST',cookie:'webeyond_ref=old',body:{name:'Source test',phone:'1234567890',lead}}),env);
+    assert.equal(r.status,400);
+  }
+  assert.equal(sqlite.prepare('SELECT COUNT(*) AS n FROM enquiries').get().n,0);
+  for(const lead of ['CFT','direct']) {
+    const r=await worker.fetch(request('/api/enquiry?ref=ignored',{method:'POST',cookie:'webeyond_ref=ignored',body:{name:lead+' customer',phone:'1234567890',lead}}),env);
+    assert.equal(r.status,200);
+    assert.equal(sqlite.prepare('SELECT lead FROM enquiries WHERE name = ?').get(lead+' customer').lead,lead);
+  }
+  assert.equal((await worker.fetch(request('/?ref=cft'),env)).headers.get('set-cookie'),null);
+});
+
+test("authenticated manual creation validates input, defaults Lead and returns generated fields",async t=>{
+  const {env,sqlite}=setup(t);const cookie=sessionCookie(await logIn(env));
+  for(const lead of ['', 'Known partner / personal contact']) {
+    const response=await worker.fetch(request('/api/admin/enquiries',{method:'POST',cookie,body:{name:'Manual enquiry',phone:'1234567890',business_name:'',email:'',message:'',lead,id:1000,created_at:'forged'}}),env);
+    assert.equal(response.status,201);const row=(await response.json()).enquiry;
+    assert.equal(row.lead,lead||'manual');assert.ok(row.id!==1000&&row.created_at!=='forged');assert.equal(row.email,null);assert.equal(row.business_name,null);
+  }
+  for(const body of [{name:'X',phone:'1'},{name:'Valid',phone:'1234567890',email:'bad'},{name:'Valid',phone:'1234567890',lead:'a'.repeat(101)},{name:[],phone:'1234567890'}]) {
+    assert.equal((await worker.fetch(request('/api/admin/enquiries',{method:'POST',cookie,body}),env)).status,400);
+  }
+  assert.equal(sqlite.prepare('SELECT count(*) AS n FROM enquiries').get().n,2);
+});
+
+test("admin create and delete reject missing sessions and missing/cross-site Origins",async t=>{
+  const {env,sqlite}=setup(t);const cookie=sessionCookie(await logIn(env));
+  for(const [path,method] of [['/api/admin/enquiries','POST'],['/api/admin/enquiries/1','DELETE']]) {
+    assert.equal((await worker.fetch(request(path,{method,body:method==='POST'?{}:undefined,headers:{origin}}),env)).status,401);
+    for(const headers of [{origin:''},{origin:'https://attacker.example'},{origin,'sec-fetch-site':'cross-site'}]) {
+      assert.equal((await worker.fetch(request(path,{method,cookie,headers,body:method==='POST'?{}:undefined}),env)).status,403);
+    }
+  }
+  assert.equal(sqlite.prepare('SELECT count(*) AS n FROM enquiries').get().n,0);
+});
+
+test("admin deletion removes one row and validates nonexistent and malformed IDs",async t=>{
+  const {env,sqlite}=setup(t);const cookie=sessionCookie(await logIn(env));
+  sqlite.prepare('INSERT INTO enquiries (name,phone) VALUES (?,?)').run('Historical row','1234567890');
+  const remove=id=>worker.fetch(request('/api/admin/enquiries/'+id,{method:'DELETE',cookie,headers:{origin}}),env);
+  for(const id of ['0','-1','1.2','abc','1%20OR%201=1','9007199254740992']) assert.equal((await remove(id)).status,400);
+  assert.equal((await remove('999')).status,404);
+  assert.equal((await remove('1')).status,200);assert.equal((await remove('1')).status,404);
+  assert.equal(sqlite.prepare('SELECT count(*) AS n FROM enquiries').get().n,0);
 });

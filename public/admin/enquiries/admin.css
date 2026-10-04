@@ -31,7 +31,7 @@ th button:hover,th button:focus-visible{color:#111;text-decoration:underline}
 th span{display:inline-block;min-width:10px;margin-left:3px}
 td{font-size:13px;color:#30343a}
 tr:last-child td{border-bottom:0}
-td:nth-child(1),td:nth-child(2),td:nth-child(3),td:nth-child(7){white-space:nowrap}
+td:nth-child(1),td:nth-child(2),td:nth-child(3),td:nth-child(8),td:nth-child(9){white-space:nowrap}
 td:nth-child(2){font-weight:600;color:#16181a}
 .empty{color:#898e93}
 .message-toggle{border:0;background:none;color:#30343a;padding:0;cursor:pointer;text-align:left;max-width:230px;display:block}
@@ -40,3 +40,20 @@ td:nth-child(2){font-weight:600;color:#16181a}
 .message-detail td{white-space:normal;background:#f8f9fa;padding:16px 18px;line-height:1.55;overflow-wrap:anywhere}
 .message-detail p{margin:0;max-width:80ch;white-space:pre-wrap}
 @media(max-width:700px){.admin-nav{min-height:60px}.brand{max-width:135px}.brand img{height:34px}.nav-links a{padding:8px}.page-heading{align-items:start;flex-direction:column;gap:8px}.count{font-size:12px}}
+.heading-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.heading-actions button,.dialog-actions button{font:inherit;min-height:40px;border:1px solid #dcdfe2;border-radius:5px;padding:8px 12px;background:#fff;color:#181a1c;cursor:pointer}
+.dialog-actions button[type=submit]{background:#181a1c;color:#fff;border-color:#181a1c}
+.delete-enquiry{font:inherit;background:none;border:0;padding:5px 0;color:#9a3030;cursor:pointer;text-decoration:underline;text-underline-offset:3px;min-height:32px}
+button:disabled{opacity:.6;cursor:wait}
+dialog{width:min(460px,calc(100% - 32px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid #dcdfe2;border-radius:6px;padding:22px;background:#fff;color:#181a1c}
+dialog::backdrop{background:rgb(0 0 0 / 35%)}
+.dialog-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.dialog-heading h2{margin:0;font-size:22px}
+.dialog-heading button{background:none;border:0;font-size:24px;min-width:40px;min-height:40px;cursor:pointer}
+dialog label{display:block;font-weight:600;margin-bottom:12px}
+dialog label span{float:right;color:#62676d;font-weight:400;font-size:12px}
+dialog input,dialog textarea{display:block;width:100%;font:inherit;margin-top:5px;border:1px solid #dcdfe2;border-radius:4px;padding:9px;min-height:40px}
+dialog textarea{resize:vertical}
+.dialog-actions{display:flex;justify-content:flex-end;gap:10px}
+dialog .error{color:#9a3030;margin:8px 0}
+td{overflow-wrap:anywhere}

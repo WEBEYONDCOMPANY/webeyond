@@ -78,12 +78,12 @@ async function handleEnquiry(request, env) {
   const body = await readSmallJson(request);
   if (!body) return json({ error: "Invalid request" }, 400);
   const lead = validate(body);
-  if (!lead) return json({ error: "Please check your details" }, 400);
+  if (!lead || !["CFT", "direct"].includes(body.lead)) return json({ error: "Please check your details and choose how you found us" }, 400);
   if (lead.website) return json({ ok: true });
   if (!env.DB) return json({ error: "Enquiries are unavailable" }, 503);
   try {
     await env.DB.prepare(
-      "INSERT INTO enquiries (name, phone, business_name, email, message) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO enquiries (name, phone, business_name, email, message, lead) VALUES (?, ?, ?, ?, ?, ?)",
     )
       .bind(
         lead.name,
@@ -91,6 +91,7 @@ async function handleEnquiry(request, env) {
         lead.business_name || null,
         lead.email || null,
         lead.message || null,
+        body.lead,
       )
       .run();
     return json({ ok: true });
@@ -101,17 +102,50 @@ async function handleEnquiry(request, env) {
 }
 
 async function handleAdminEnquiries(request, env) {
+  if (request.method === "POST") return createAdminEnquiry(request, env);
   if (request.method !== "GET") return json({ error: "Method not allowed" }, 405);
   if (!env.DB) return json({ error: "Enquiries are unavailable" }, 503);
   try {
     const { results } = await env.DB.prepare(
-      "SELECT id, name, phone, business_name, email, message, created_at FROM enquiries ORDER BY created_at DESC, id DESC",
+      "SELECT id, name, phone, business_name, email, message, lead, created_at FROM enquiries ORDER BY created_at DESC, id DESC",
     ).all();
     return json({ enquiries: results });
   } catch {
     console.error(JSON.stringify({ event: "admin_enquiries_read_failed" }));
     return json({ error: "Could not load enquiries" }, 503);
   }
+}
+
+function mutationError(request) {
+  if (request.headers.get("origin") !== new URL(request.url).origin || request.headers.get("sec-fetch-site") === "cross-site") return json({error:"Forbidden"},403);
+  return null;
+}
+
+async function createAdminEnquiry(request, env) {
+  const forbidden=mutationError(request); if(forbidden) return forbidden;
+  if(request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json") return json({error:"Expected JSON"},415);
+  const data=await readSmallJson(request);
+  if(!data || typeof data !== "object" || Array.isArray(data)) return json({error:"Invalid request"},400);
+  for(const [field,max] of Object.entries({name:80,phone:25,business_name:100,email:160,message:1200,lead:100})) {
+    if(data[field] != null && (typeof data[field] !== "string" || data[field].length > max || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(data[field]))) return json({error:"Please check your details"},400);
+  }
+  const values=validate({...data,business:data.business_name,website:""});
+  if(!values) return json({error:"Please check your details"},400);
+  try {
+    const enquiry=await env.DB.prepare("INSERT INTO enquiries (name, phone, business_name, email, message, lead) VALUES (?, ?, ?, ?, ?, ?) RETURNING id, name, phone, business_name, email, message, lead, created_at")
+      .bind(values.name,values.phone,values.business_name||null,values.email||null,values.message||null,clean(data.lead,100)||"manual").first();
+    return json({enquiry},201);
+  } catch {return json({error:"Could not save enquiry"},503);}
+}
+
+async function deleteAdminEnquiry(request, env, id) {
+  if(request.method !== "DELETE") return json({error:"Method not allowed"},405);
+  const forbidden=mutationError(request); if(forbidden) return forbidden;
+  if(!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))) return json({error:"Invalid enquiry ID"},400);
+  try {
+    const row=await env.DB.prepare("DELETE FROM enquiries WHERE id = ? RETURNING id").bind(Number(id)).first();
+    return row ? json({ok:true,id:row.id}) : json({error:"Enquiry not found"},404);
+  } catch {return json({error:"Could not delete enquiry"},503);}
 }
 
 export default {
@@ -139,6 +173,7 @@ export default {
       }
       if (path === "/api/admin/logout") return handleLogout(request, env);
       if (path === "/api/admin/enquiries") return handleAdminEnquiries(request, env);
+      if (path.startsWith("/api/admin/enquiries/")) return deleteAdminEnquiry(request, env, path.slice("/api/admin/enquiries/".length));
       if (adminApiPath) return json({ error: "Not found" }, 404);
       if (path === "/admin" || path === "/admin/") {
         return new Response(null, { status: 302, headers: {
@@ -162,7 +197,7 @@ export default {
     if (path.startsWith("/api/")) return json({ error: "Not found" }, 404);
     if (path === "/work") {
       const index = new URL("/work/", request.url);
-      return env.ASSETS.fetch(new Request(index, request));
+      return await env.ASSETS.fetch(new Request(index, request));
     }
     if (path.startsWith("/demos/veyil/")) {
       const asset = await env.ASSETS.fetch(request);
@@ -172,8 +207,8 @@ export default {
       )
         return asset;
       const index = new URL("/demos/veyil/", request.url);
-      return env.ASSETS.fetch(new Request(index, request));
+      return await env.ASSETS.fetch(new Request(index, request));
     }
-    return env.ASSETS.fetch(request);
+    return await env.ASSETS.fetch(request);
   },
 };

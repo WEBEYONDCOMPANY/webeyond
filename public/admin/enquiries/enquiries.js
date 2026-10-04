@@ -8,6 +8,30 @@ let enquiries = [];
 let sortKey = "created_at";
 let direction = "desc";
 const expanded = new Set();
+const addDialog = document.querySelector("#add-dialog");
+const addForm = document.querySelector("#add-form");
+const addError = document.querySelector("#add-error");
+
+async function mutate(url, options) {
+  const response = await fetch(url, {credentials:"same-origin", ...options});
+  if (response.status === 401) { location.replace("/admin/login"); throw new Error("Please log in again."); }
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Could not update enquiries.");
+  return data;
+}
+document.querySelector("#add-enquiry").addEventListener("click", () => {
+  addForm.reset(); addError.textContent=""; addDialog.showModal();
+});
+for (const id of ["close-add","cancel-add"]) document.getElementById(id).addEventListener("click",()=>addDialog.close());
+addForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+  const save=addForm.querySelector('[type="submit"]'); save.disabled=true; addError.textContent="";
+  try {
+    const data=await mutate("/api/admin/enquiries",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(new FormData(addForm)))});
+    enquiries.push(data.enquiry); render(); addDialog.close(); status.hidden=true; tableWrap.hidden=false;
+  } catch(error) {addError.textContent=error.message;}
+  finally {save.disabled=false;}
+});
 
 document.querySelector("#logout").addEventListener("click", async (event) => {
   event.target.disabled = true;
@@ -53,6 +77,7 @@ function cell(value) {
 }
 
 function render() {
+  count.textContent = `${enquiries.length} ${enquiries.length === 1 ? "enquiry" : "enquiries"}`;
   body.replaceChildren();
   for (const item of sortedRows()) {
     const row = document.createElement("tr");
@@ -77,13 +102,25 @@ function render() {
       message.textContent = "—";
       message.className = "empty";
     }
-    row.append(message, cell(item.created_at));
+    const actions=document.createElement("td");
+    const remove=document.createElement("button");remove.type="button";remove.className="delete-enquiry";remove.textContent="Delete";
+    remove.setAttribute("aria-label",`Delete enquiry ${item.id} from ${item.name}`);
+    remove.addEventListener("click",async()=>{
+      if(!window.confirm(`Delete enquiry #${item.id} from ${item.name}? This cannot be undone.`)) return;
+      remove.disabled=true;
+      try {
+        await mutate(`/api/admin/enquiries/${item.id}`,{method:"DELETE"});
+        enquiries=enquiries.filter(value=>value.id!==item.id);expanded.delete(item.id);render();status.hidden=true;
+      } catch(error){status.hidden=false;status.classList.add("error");status.textContent=error.message;remove.disabled=false;}
+    });
+    actions.append(remove);
+    row.append(message, cell(item.lead), cell(item.created_at), actions);
     body.append(row);
     if (expanded.has(item.id) && item.message) {
       const detail = document.createElement("tr");
       detail.className = "message-detail";
       const td = document.createElement("td");
-      td.colSpan = 7;
+      td.colSpan = 9;
       const full = document.createElement("p");
       full.textContent = item.message;
       td.append(full);

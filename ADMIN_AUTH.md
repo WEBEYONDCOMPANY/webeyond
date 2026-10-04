@@ -86,9 +86,10 @@ provider is needed.
   migration failures, and D1 errors fail closed. Tokens/password hashes are not
   returned as JSON or logged. Admin responses use no-store; the pages also have
   a restrictive CSP and frame protection.
-- GET `/api/admin/enquiries` returns the seven existing columns with
+- GET `/api/admin/enquiries` returns the original columns plus Lead with
   `created_at DESC, id DESC`. The public website and POST `/api/enquiry` remain
   public. Table sorting, expandable messages and mobile scrolling are preserved.
+  Authenticated creation and deletion are documented in `ENQUIRIES.md`.
 
 ## Throttling and limitations
 

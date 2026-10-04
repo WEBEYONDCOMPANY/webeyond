@@ -24,7 +24,7 @@
     <main id="main" class="admin-main">
       <div class="page-heading">
         <div><h1>Enquiries</h1><p>Customer enquiries submitted through the website</p></div>
-        <span id="count" class="count" aria-live="polite"></span>
+        <div class="heading-actions"><span id="count" class="count" aria-live="polite"></span><button id="add-enquiry" type="button">+ Add enquiry</button></div>
       </div>
       <p id="status" class="status" role="status">Loading enquiries…</p>
       <div id="table-wrap" class="table-wrap" hidden tabindex="0" aria-label="Enquiries table, scroll horizontally to see all columns">
@@ -36,11 +36,27 @@
             <th scope="col" data-key="business_name"><button type="button">Business name <span aria-hidden="true"></span></button></th>
             <th scope="col" data-key="email"><button type="button">Email <span aria-hidden="true"></span></button></th>
             <th scope="col" data-key="message"><button type="button">Message <span aria-hidden="true"></span></button></th>
+            <th scope="col" data-key="lead"><button type="button">Lead <span aria-hidden="true"></span></button></th>
             <th scope="col" data-key="created_at" aria-sort="descending"><button type="button">Created at <span aria-hidden="true">↓</span></button></th>
+            <th scope="col">Actions</th>
           </tr></thead>
           <tbody id="enquiries-body"></tbody>
         </table>
       </div>
+      <dialog id="add-dialog" aria-labelledby="add-title">
+        <form id="add-form">
+          <div class="dialog-heading"><h2 id="add-title">Add enquiry</h2><button id="close-add" type="button" aria-label="Close add enquiry">×</button></div>
+          <label>Name <input name="name" required maxlength="80" autocomplete="off" /></label>
+          <label>Phone <input name="phone" type="tel" required maxlength="25" autocomplete="off" /></label>
+          <label>Business name <span>Optional</span><input name="business_name" maxlength="100" /></label>
+          <label>Email <span>Optional</span><input name="email" type="email" maxlength="160" /></label>
+          <label>Message <span>Optional</span><textarea name="message" rows="3" maxlength="1200"></textarea></label>
+          <label>Lead <span>Optional</span><input name="lead" maxlength="100" list="lead-suggestions" placeholder="manual" /></label>
+          <datalist id="lead-suggestions"><option value="direct"></option><option value="manual-call"></option><option value="manual-text"></option><option value="whatsapp"></option><option value="instagram"></option></datalist>
+          <p id="add-error" class="error" role="alert"></p>
+          <div class="dialog-actions"><button id="cancel-add" type="button">Cancel</button><button type="submit">Save enquiry</button></div>
+        </form>
+      </dialog>
     </main>
   </body>
 </html>

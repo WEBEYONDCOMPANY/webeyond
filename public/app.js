@@ -13,18 +13,19 @@ function showError(field, message) {
 
 function validate(payload) {
   const errors = {};
+  if (!["CFT", "direct"].includes(payload.lead)) errors.lead = "Please choose how you found us.";
   if (payload.name.length < 2) errors.name = "Please enter your name.";
   const digits = payload.phone.replace(/\D/g, "");
   if (digits.length < 7 || digits.length > 15)
     errors.phone = "Enter a phone number we can reach.";
   if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email))
     errors.email = "Enter a valid email address or leave this blank.";
-  for (const field of ["name", "phone", "email"])
+  for (const field of ["lead", "name", "phone", "email"])
     showError(field, errors[field] || "");
   return Object.keys(errors).length === 0;
 }
 
-for (const field of ["name", "phone", "email"]) {
+for (const field of ["lead", "name", "phone", "email"]) {
   form.elements
     .namedItem(field)
     .addEventListener("input", () => showError(field, ""));

@@ -200,6 +200,15 @@
           </div>
           <form class="lead-form" id="lead-form" novalidate>
             <div class="form-row">
+              <label for="lead">How did you find us? <span>*</span></label>
+              <select id="lead" name="lead" required>
+                <option value="" disabled selected>Choose an option</option>
+                <option value="CFT">Found or contacted through Career Fix Tamizha</option>
+                <option value="direct">Found or contacted through WEBEYOND directly</option>
+              </select>
+              <small class="field-error" id="lead-error"></small>
+            </div>
+            <div class="form-row">
               <label for="name">Your name <span>*</span></label
               ><input
                 id="name"

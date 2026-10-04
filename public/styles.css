@@ -4154,3 +4154,19 @@ html.home-page .language-yours.language-any { margin-left: 12%; font-weight: 750
   .process-list li.middle-ready::before { scale: 1 1 !important; transition: none; }
   html.home-page .process-contact-link { transition: none; }
 }
+
+/* Source selection uses the public form's existing underline treatment. */
+html.home-page .contact-section .lead-form { margin-top: 24px; }
+html.home-page .contact-section .form-row { margin-bottom: 14px; }
+html.home-page .contact-section .form-row select {
+  display: block; width: 100%; min-width: 0; border: 0;
+  border-bottom: 1px solid #8d9694; border-radius: 0;
+  background: transparent; color: var(--ink); font: inherit;
+  font-size: 16px; line-height: 1.4; padding: 10px 24px 12px 0;
+  min-height: 44px; outline: none; text-overflow: ellipsis;
+}
+html.home-page .contact-section .form-row select:focus { border-bottom: 2px solid var(--ink); }
+html.home-page .contact-section .form-row select[aria-invalid="true"] { border-bottom: 2px solid #ffaaa4; }
+html.home-page .contact-section .form-row select option { background: var(--white); color: var(--ink); }
+html.home-page .contact-section .form-note { margin-top: 20px; }
+html.home-page .contact-section .form-row select:invalid { color: #687176; }
