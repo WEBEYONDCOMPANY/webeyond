@@ -11,6 +11,7 @@ export const projects = [
   },
   {
     name: "Raman",
+    workTitle: "Interior Designer Site",
     category: "INTERIOR DESIGN SITE",
     description:
       "An image-led portfolio that gives each space room to speak and makes enquiries feel natural.",
@@ -21,6 +22,7 @@ export const projects = [
   },
   {
     name: "Meera Law",
+    workTitle: "Law Firm Site",
     category: "PROFESSIONAL SERVICES SITE",
     description:
       "A legal practice concept focused on clarity, trust and helping people understand their next step.",

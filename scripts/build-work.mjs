@@ -16,18 +16,33 @@ const escape = (value) =>
     return entities[character];
   });
 
+const demos = JSON.parse(await readFile(join(root, "demos.config.json"), "utf8"));
+
 function renderProject(project, index) {
   if (!project.route.startsWith("/demos/")) {
     throw new Error(`Invalid local path for ${project.name}`);
   }
   const id = `work-project-${index + 1}`;
+  const demo = demos.find(d => d.route === project.route);
+  if (!demo?.screenshot) throw new Error(`Missing generated preview for ${project.name}`);
+  const title = project.workTitle || project.name;
+  const number = String(index + 1).padStart(2, "0");
   return `
-        <article class="work-card" aria-labelledby="${id}">
-          <div class="work-card-copy">
-            <p class="work-card-category">${escape(project.category)}</p>
-            <h2 id="${id}">${escape(project.name)}</h2>
-            <p>${escape(project.description)}</p>
-            <a class="work-card-link" href="${escape(project.route)}">Explore the site <span aria-hidden="true">↗</span></a>
+        <article class="showcase showcase-${index + 1}" id="concept-${index + 1}" aria-labelledby="${id}">
+          <div class="showcase-inner wrap">
+            <div class="showcase-heading">
+              <p class="showcase-category"><span>${number} /</span> ${escape(project.category)}</p>
+              <h2 id="${id}">${escape(title)}</h2>
+            </div>
+            <a class="showcase-preview" href="${escape(project.route)}" aria-label="Open the ${escape(title)} demo">
+              <div class="preview-caption"><span>LIVE CONCEPT</span><span aria-hidden="true">↗</span></div>
+              <img src="/generated-work/${escape(demo.screenshot.output)}" alt="Desktop preview of the ${escape(title)} concept" width="1440" height="900" loading="${index === 0 ? "eager" : "lazy"}" />
+              <span class="preview-invitation" aria-hidden="true">Take a look inside ↗</span>
+            </a>
+            <div class="showcase-details">
+              <p>${escape(project.description)}</p>
+              <a class="showcase-link" href="${escape(project.route)}">Open the demo <span aria-hidden="true">↗</span></a>
+            </div>
           </div>
         </article>`;
 }
@@ -42,7 +57,6 @@ await writeFile(join(directory, "index.html"), output);
 console.log(`Built work page with ${projects.length} projects`);
 
 // The same demo manifest controls which generated previews fill the two slots.
-const demos = JSON.parse(await readFile(join(root, "demos.config.json"), "utf8"));
 const teaser = demos.filter(d => d.screenshot?.teaser);
 if (teaser.length !== 2) throw new Error("Homepage requires exactly two teaser demos");
 const homepage = join(root, "public", "index.html");

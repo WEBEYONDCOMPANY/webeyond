@@ -1,48 +1,59 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="work-page-root">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#ffffff" />
-    <meta name="description" content="Explore functioning concept websites by Web & Beyond, built for different kinds of businesses." />
-    <title>Our work — Web & Beyond</title>
+    <meta name="description" content="Explore functioning concept websites by WEBEYOND, built for different kinds of businesses." />
+    <title>Our work — WEBEYOND</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,300..800&family=Anek+Tamil:wght@300..800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body>
+  <body class="work-showcase">
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header" id="top">
-      <a class="wordmark" href="/" aria-label="Web and Beyond, homepage"><img src="/web-beyond-logo.png?v=2" alt="" width="210" height="52" /></a>
+      <a class="wordmark" href="/" aria-label="WEBEYOND, homepage">
+        <img src="/web-beyond-logo.png?v=2" alt="" width="210" height="52" />
+      </a>
       <nav class="header-nav" aria-label="Primary navigation">
-        <a href="/work" aria-current="page">Work</a><a href="/#approach">Approach</a><a class="header-contact" href="/#contact">Start <span aria-hidden="true">↗</span></a>
+        <div class="nav-menu" id="nav-menu">
+          <a href="/">Home</a><a href="/work" aria-current="page">Our Work</a><a href="/admin">Admin</a>
+        </div>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>
+        <a class="header-contact" href="/#contact">Enquire</a>
       </nav>
     </header>
     <main id="main" class="work-page">
       <div class="work-page-intro wrap">
         <a class="work-back" href="/">← Back to homepage</a>
-        <p class="eyebrow">Selected concepts</p>
         <h1>Our work.</h1>
-        <p>Different businesses call for different answers. Explore these working concepts to see what that can look like.</p>
+        <p>Different businesses. Different Answers.<br />Go inside each working concept.</p>
+        <nav class="concept-index" aria-label="Explore the concepts">
+          <a href="#concept-1"><span>01</span> Coffee &amp; commerce ↘</a>
+          <a href="#concept-2"><span>02</span> Spaces &amp; stories ↘</a>
+          <a href="#concept-3"><span>03</span> Clarity &amp; trust ↘</a>
+        </nav>
       </div>
-      <div class="work-list wrap" aria-label="Concept projects">
+      <div class="work-list" aria-label="Concept projects">
         <!-- PROJECTS -->
       </div>
       <section class="work-page-ending wrap" aria-labelledby="work-ending-title">
-        <p class="eyebrow">Beyond these examples</p>
-        <h2 id="work-ending-title">Every brief changes the answer.</h2>
-        <p>These concepts show how we think. What we build for you starts with your business.</p>
-        <a href="/#contact">Tell us about it <span aria-hidden="true">↗</span></a>
+        <h2 id="work-ending-title">Your business.<br />A different answer.</h2>
+        <p>These are concept demos, not client projects.<br />Tell us what you need. We’ll build around it.</p>
+        <a href="/#contact">Start your enquiry <span aria-hidden="true">↗</span></a>
       </section>
     </main>
     <footer class="site-footer wrap">
-      <a class="footer-wordmark" href="/" aria-label="Web and Beyond, homepage"><img src="/web-beyond-logo.png?v=2" alt="" width="270" height="67" loading="lazy" /></a>
+      <a class="footer-wordmark" href="/" aria-label="WEBEYOND, homepage"><img src="/web-beyond-logo.png?v=2" alt="" width="270" height="67" loading="lazy" /></a>
       <div class="footer-links">
         <a href="mailto:webeyondcompany@gmail.com">webeyondcompany@gmail.com</a><a href="https://www.instagram.com/webeyondcompany/" target="_blank" rel="noopener noreferrer">Instagram <span aria-hidden="true">↗</span></a>
       </div>
       <div class="footer-end"><span>Built with thought. Built to move.</span><a href="#top">Back to top ↑</a></div>
     </footer>
+    <script src="/top-ui.js" defer></script>
+    <script src="/work/showcase.js" defer></script>
   </body>
 </html>

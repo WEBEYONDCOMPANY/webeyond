@@ -9,8 +9,9 @@ override copies inputs before building. Demo repositories are never written or p
 The single manifest defines repository, branch, deployed route, screenshot filename,
 optional visible `readySelector`, and `teaser: true` for the two homepage slots.
 Captures are 1440 × 900, top viewport only, optimized WebP. The homepage keeps its
-existing two-slot layout and `/work` link. The current text-only Our Work page stays
-text-only; there are no manual screenshots in its rendered HTML to replace.
+existing two-slot layout and `/work` link. Our Work uses all three generated
+desktop previews as clickable concept showcases. Visible Work titles are separate
+from demo identities and routes; the demo repositories remain unchanged.
 
 ## Build environment
 
